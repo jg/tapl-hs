@@ -20,30 +20,31 @@ import Alexer
 
 %%
 
-TopLevel :: { [Command] }
+TopLevel :: { Context -> [Command] }
 TopLevel :
-    Command { [$1] } |
-    TopLevel ';' Command { $3:$1 } |
-    {- empty -} { [] }
+    Command { \ctx -> [$1 ctx] } |
+    TopLevel ';' Command { \ctx -> $3 ctx : $1 ctx} |
+    {- empty -} {  \ctx -> [] }
 
-Command :: { Command }
+Command :: { Context -> Command }
 Command :
-    Term { Eval (termInfo $1) $1 }
+    Term { \ctx -> Eval (termInfo ($1 ctx)) ($1 ctx) }
 
-Term :: { Term }
+Term :: { Context -> Term }
 Term :
-    AppTerm { $1 } |
-    LAMBDA IDENTIFIER '.' Term { Abs (info $1) (getId $2) $4 }
+    AppTerm { \ctx -> $1 ctx } |
+    LAMBDA IDENTIFIER '.' Term
+        { \ctx -> Abs (info $1) (getId $2) ($4 ctx) }
 
-AppTerm :: { Term }
+AppTerm :: { Context -> Term }
 AppTerm :
-    ATerm { $1 } |
-    AppTerm ATerm { App (termInfo $1) $1 $2 }
+    ATerm { \ctx -> $1 ctx } |
+    AppTerm ATerm { \ctx -> App (termInfo ($1 ctx)) ($1 ctx) ($2 ctx) }
 
-ATerm :: { Term }
+ATerm :: { Context -> Term }
 ATerm :
-    '(' Term ')' { $2 } |
-    IDENTIFIER { Var (info $1) (getId $1) }
+    '(' Term ')' { \ctx -> $2 ctx } |
+    IDENTIFIER { \ctx -> Var (info $1) (getId $1) }
 
 {
 info (PosToken _ pos) = Info pos
@@ -54,5 +55,5 @@ getId (PosToken (Id s) _) = s
 happyError x = error ("Parse Error at line " ++ show x)
 
 parse :: [PosToken] -> [Command]
-parse = toplevel
+parse = (flip toplevel) emptyContext
 }

@@ -11,6 +11,13 @@ data Term =
 
 data Info = Info Position deriving (Eq, Show)
 
+type Name = String
+type Value = String
+type Context = [(Name, Value)]
+
+emptyContext :: Context
+emptyContext = []
+
 termInfo :: Term -> Info
 termInfo (Var info _) = info
 termInfo (Abs info _ _) = info
