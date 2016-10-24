@@ -21,11 +21,11 @@ spec = do
 
   describe "Parser" $ do
     it "parses a variable eval" $ do
-      parse (test "x") `shouldBe` [Eval (Var "x")]
+      parse (scan "x") `shouldBe` [Eval (Info (Position 1 1)) (Var (Info (Position 1 1)) "x")]
     it "parses a lambda" $ do
-      parse (test "lambda x.x") `shouldBe` [Eval (Abs "x" (Var "x"))]
+      parse (scan "lambda x.x") `shouldBe` [Eval (Info (Position 1 1)) (Abs (Info (Position 1 1)) "x" (Var (Info (Position 1 10)) "x"))] 
     it "deals with parens and application" $ do
-      parse (test "(lambda x. x) (lambda y. y)") `shouldBe` [Eval (App (Abs "x" (Var "x")) (Abs "y" (Var "y")))]
+      parse (scan "(lambda x. x) (lambda y. y)") `shouldBe` [Eval (Info (Position 1 2)) (App (Info (Position 1 2)) (Abs (Info (Position 1 2)) "x" (Var (Info (Position 1 12)) "x")) (Abs (Info (Position 1 16)) "y" (Var (Info (Position 1 26)) "y")))]
     it "deals with empty input" $ do
-      parse (test "") `shouldBe` []
+      parse (scan "") `shouldBe` []
         

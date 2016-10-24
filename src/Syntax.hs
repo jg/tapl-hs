@@ -1,14 +1,20 @@
 module Syntax where
 
 data Command =
-  Eval Term |
-  Bind String String deriving (Eq, Show)
+  Eval Info Term |
+  Bind Info String String deriving (Eq, Show)
 
 data Term =
-  Var String     |
-  Abs String Term |
-  App Term Term deriving (Eq, Show)
+  Var Info String     |
+  Abs Info String Term |
+  App Info Term Term deriving (Eq, Show)
 
+data Info = Info Position deriving (Eq, Show)
+
+termInfo :: Term -> Info
+termInfo (Var info _) = info
+termInfo (Abs info _ _) = info
+termInfo (App info _ _) = info
 
 -- The token type:
 data Token =

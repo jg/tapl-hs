@@ -8,15 +8,15 @@ import Alexer
 }
 
 %name toplevel
-%tokentype { Token }
+%tokentype { PosToken }
 
 %token
-    LAMBDA { Lambda }
-    '.' { Dot }
-    '(' { Sym '(' }
-    ')' { Sym ')' }
-    ';' { Sym ';' }
-    IDENTIFIER { Id $$ }
+    LAMBDA { PosToken (Lambda) _ }
+    '.' { PosToken Dot _ }
+    '(' { PosToken (Sym '(') _ }
+    ')' { PosToken (Sym ')') _ }
+    ';' { PosToken (Sym ';') _ }
+    IDENTIFIER { PosToken _ _}
 
 %%
 
@@ -25,25 +25,27 @@ TopLevel :
     TopLevel ';' Command { $3:$1 } |
     {- empty -} { [] }
 
-Command : Term { Eval $1 }
+Command : Term { Eval (termInfo $1) $1 }
 
 Term :
     AppTerm { $1 } |
-    LAMBDA IDENTIFIER '.' Term { Abs $2 $4 }
+    LAMBDA IDENTIFIER '.' Term { Abs (info $1) (getId $2) $4 }
 
 AppTerm :
     ATerm { $1 } |
-    AppTerm ATerm { App $1 $2 }
+    AppTerm ATerm { App (termInfo $1) $1 $2 }
 
 ATerm :
     '(' Term ')' { $2 } |
-    IDENTIFIER { Var $1 }
+    IDENTIFIER { Var (info $1) (getId $1) }
 {
-
-getId (Id s) = s
+info (PosToken _ pos) = Info pos
+token (PosToken tok _) = tok
+  
+getId (PosToken (Id s) _) = s
 
 happyError x = error ("Parse Error at line " ++ show x)
 
-parse :: [Token] -> [Command]
+parse :: [PosToken] -> [Command]
 parse = toplevel
 }
