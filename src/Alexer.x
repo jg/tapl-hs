@@ -1,5 +1,7 @@
 {
 module Alexer (scan, test, Token(..), AlexPosn(..), PosToken(..)) where
+
+import Syntax
 }
 
 %wrapper "posn"
@@ -15,7 +17,7 @@ tokens :-
   "lambda"                              { tok (\s -> Lambda) }
   $digit+				{ tok (\s -> Int (read s)) }
   [\=\+\-\*\/\(\)]			{ tok (\s -> Sym (head s)) }
-  $alpha [$alpha $digit \_ \']*		{ tok (\s -> Var s) }
+  [a-z]+		                { tok (\s -> Id s) }
 {
 
 -- Each right-hand side has type :: AlexPosn -> String -> Token
@@ -24,20 +26,6 @@ tokens :-
 tok :: (String -> Token) -> AlexPosn -> String -> PosToken
 tok f (AlexPn abs line col) s =
   PosToken (f s) (Position line col)
-
--- The token type:
-data Token =
-    Sym Char	|
-    Var String	|
-    Int Int     |
-    Lambda      |
-    Dot 
-    deriving (Eq,Show)
-
-
-data Position = Position Int Int deriving (Eq, Show)
-
-data PosToken = PosToken Token Position deriving (Eq, Show)
 
 scan s = alexScanTokens s
 
