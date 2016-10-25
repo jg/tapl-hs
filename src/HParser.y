@@ -33,8 +33,14 @@ Command :
 Term :: { Context -> Term }
 Term :
     AppTerm { \ctx -> $1 ctx } |
-    LAMBDA IDENTIFIER '.' Term
-        { \ctx -> Abs (info $1) (getId $2) ($4 ctx) }
+    LAMBDA IDENTIFIER '.' Term {
+        \ctx -> let
+            inf = info $1
+            name = getId $2
+            ctx1 = addName ctx name
+        in
+            Abs (info $1) (getId $2) ($4 ctx1)
+    }
 
 AppTerm :: { Context -> Term }
 AppTerm :
@@ -44,7 +50,15 @@ AppTerm :
 ATerm :: { Context -> Term }
 ATerm :
     '(' Term ')' { \ctx -> $2 ctx } |
-    IDENTIFIER { \ctx -> Var (info $1) (getId $1) }
+    IDENTIFIER {
+        \ctx -> let
+            name = getId $1
+            inf = info $1
+            brujin = name2Index inf ctx name
+            l = length ctx
+        in      
+            Var inf name brujin l
+    }
 
 {
 info (PosToken _ pos) = Info pos
